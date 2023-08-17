@@ -1,6 +1,6 @@
 # DealStore web Based on Microservice architecture and ready for Native Cloud .
 
-> The PoC prototype of Automated Irregularity Management System Architecture (illustrated in Figure 4.4.1) is designed around the principles of a Microservices architecture and provides scalability, modularity as well as flexibility. This architecture is orchestrated through Kubernetes which ensures seamless container orchestration, auto-scaling, and efficient resource management. The system comprises several key components, each operating in its own containerized environment:
+> The PoC prototype of Automated Irregularity Management System Architecture  is designed around the principles of a Microservices architecture and provides scalability, modularity as well as flexibility. This architecture is orchestrated through Kubernetes which ensures seamless container orchestration, auto-scaling, and efficient resource management. The system comprises several key components, each operating in its own containerized environment:
 
 >Frontend Container:
 The Frontend container is responsible for the user interface and interaction with passengers. It offers a user-friendly interface accessible through touch screen terminals. Passengers can conveniently interact with the system, request information, and select options for managing irregularities.
