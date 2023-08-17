@@ -1,0 +1,124 @@
+version: "3.8"
+
+services:
+#DealStoreWeb APP #################################################################
+    #####SQLServer DataBase as Docker
+    data: 
+        container_name: dealstore_db
+        image: waelamer/dealstore_db:1.0.0
+        ports: 
+            - "1433:1433"
+        environment:
+            - ACCEPT_EULA=Y
+            - SA_PASSWORD=4SY3yB6JvwJHsbYZuXjP
+        volumes: 
+            - sqldata:/var/opt/mssql 
+        networks:
+            - dealstoreweb-app
+        depends_on:
+            - loki
+        logging:
+          driver: loki
+          options:
+            loki-url: "http://localhost:3100/loki/api/v1/push"
+#####Backend Microservice/API "System"
+    system:
+        container_name: dealstore_backend_system
+        image: waelamer/dealstore_backend_system:2.0.1
+        build:
+            context: ./Backend.System
+            dockerfile: ./Dockerfile        
+        ports:
+            - "8083:80"
+        environment:
+            - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+        hostname: "deal"
+        networks: 
+            - dealstoreweb-app
+        depends_on:
+            - loki
+        logging:
+          driver: loki
+          options:
+            loki-url: "http://localhost:3100/loki/api/v1/push"      
+    #####Backend Microservice/API "Deal"
+    deal:
+        container_name: dealstore_backend_deal
+        image: waelamer/dealstore_backend_deal:2.0.1
+        build:
+            context: ./Backend.Deal
+            dockerfile: ./Dockerfile        
+        ports:
+            - "8082:80"
+        environment:
+            - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+        hostname: "deal"
+        networks: 
+            - dealstoreweb-app
+        depends_on:
+            - loki
+        logging:
+          driver: loki
+          options:
+            loki-url: "http://localhost:3100/loki/api/v1/push"
+    #########Backend Microservice/API "Provider"
+    provider:
+        container_name: dealstore_backend_provider
+        image: waelamer/dealstore_backend_provider:2.0.1
+        build:
+            context: ./Backend.Provider
+            dockerfile: ./Dockerfile        
+        ports:
+            - "8081:80"
+        environment:
+            - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+        hostname: "provider"
+        networks: 
+            - dealstoreweb-app
+        depends_on:
+            - loki
+        logging:
+          driver: loki
+          options:
+            loki-url: "http://localhost:3100/loki/api/v1/push"
+
+    #########Frontend 
+    frontend:
+        container_name: dealstore_frontend
+        image: waelamer/dealstore_frontend:2.0.1
+        build:
+            context: ./Frontend
+            dockerfile: ./Dockerfile        
+        ports:
+            - "8080:8080"
+        environment:
+            - VUE_APP_ROOT_API_P=http://localhost:8081
+            - VUE_APP_ROOT_API_D=http://localhost:8082
+            - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+        hostname: "frontend"
+        depends_on:
+            - loki
+        networks:
+            - dealstoreweb-app
+        logging:
+          driver: loki
+          options:
+            loki-url: "http://localhost:3100/loki/api/v1/push"
+networks:
+    dealstoreweb-app:
+volumes:
+    sqldata:
+    # influxdb_data:
+
+# Only IrregularityPoC install 
+# FrontEnd:
+# docker run -d -p 8080:8080 --name dealstore_frontend -e VUE_APP_ROOT_API_P=http://localhost:8082 -e VUE_APP_ROOT_API_D=http://localhost:8081 waelamer/dealstore_frontend:1.0.0
+# Backend:
+# docker run -d -p 8082:80 --name dealstore_backend_deal waelamer/dealstore_backend_deal:1.1.2
+# docker run -d -p 8081:80 --name dealstore_backend_provider waelamer/dealstore_backend_provider:1.1.2
+# DB:
+# docker run -d -p 1433:1433 --name dealstore_db -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=4SY3yB6JvwJHsbYZuXjP" --env MSSQL_AGENT_ENABLED=True --mount source=dealstore_db_sqldata,target=/var/opt/mssql -d waelamer/dealstore_db:1.0.0
+
+# docker-compose up -d --force-recreate 
+#docker-compose build
+#docker-compose push

@@ -1,0 +1,56 @@
+pool:
+  name: Azure Pipelines
+steps:
+- task: AzureResourceGroupDeployment@1
+  displayName: 'Azure Deployment:Create Azure Container Registry'
+  inputs:
+    ConnectedServiceName: 'DealStoreContainer - Azure'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'DealStoreContainer-rg'
+    location: 'South Central US'
+    overrideParameters: '-registryName "DealStoreContaineracr" -registryLocation "South Central US" -registrySku "Standard"'
+    deploymentMode: 'Incremental'
+
+- task: Docker@1
+  displayName: 'Build an image'
+  inputs:
+    azureSubscriptionEndpoint: 'DealStoreContainer - Azure'
+    azureContainerRegistry: dealstorecontaineracr.azurecr.io
+    dockerFile: Backend.Deal/Dockerfile
+    imageName: 'dealstorecontainer:$(Build.BuildId)'
+
+- task: Docker@1
+  displayName: 'Push an image'
+  inputs:
+    azureSubscriptionEndpoint: 'DealStoreContainer - Azure'
+    azureContainerRegistry: dealstorecontaineracr.azurecr.io
+    command: 'Push an image'
+    imageName: 'dealstorecontainer:$(Build.BuildId)'
+
+- task: AzureResourceGroupDeployment@2
+  displayName: 'Azure Deployment:Create Azure Container Registry'
+  inputs:
+    azureSubscription: 'DealStoreContainer - Azure'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'DealstoreProviderContainer-rg'
+    location: 'West Europe'
+    templateLocation: 'URL of the file'
+    csmFileLink: 'https://raw.githubusercontent.com/Microsoft/devops-project-samples/057f6cc268a62922d012067d069d58684e967d0a/armtemplates/webapp-containers/containerRegistry-template.json'
+    overrideParameters: '-registryName "DealstoreProviderContaineracr" -registryLocation "South Central US" -registrySku "Standard"'
+    deploymentMode: 'Incremental'
+
+- task: Docker@2
+  displayName: 'Build Provider image'
+  inputs:
+    azureSubscriptionEndpoint: 'DealStoreContainer - Azure'
+    azureContainerRegistry: dealstoreprovidercontaineracr.azurecr.io
+    dockerFile: Backend.Provider/Dockerfile
+    imageName: 'dealstoreprovidercontainer:$(Build.BuildId)'
+
+- task: Docker@2
+  displayName: 'Push Provider image'
+  inputs:
+    azureSubscriptionEndpoint: 'DealStoreContainer - Azure'
+    azureContainerRegistry: dealstoreprovidercontaineracr.azurecr.io
+    command: 'Push an image'
+    imageName: 'dealstoreprovidercontainer:$(Build.BuildId)'

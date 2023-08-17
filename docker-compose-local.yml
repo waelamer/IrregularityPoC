@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+#DealStoreWeb APP #################################################################
+
+#####Backend Microservice/API "System"
+    system:
+        container_name: dealstore_backend_system
+        image: waelamer/dealstore_backend_system:2.5.0
+        build:
+            context: ./Backend.System
+            dockerfile: ./Dockerfile        
+        ports:
+            - "8083:80"
+        hostname: "system"
+        networks: 
+            - dealstoreweb-app  
+    #####Backend Microservice/API "Deal"
+    deal:
+        container_name: dealstore_backend_deal
+        image: waelamer/dealstore_backend_deal:2.5.0
+        build:
+            context: ./Backend.Deal
+            dockerfile: ./Dockerfile        
+        ports:
+            - "8082:80"
+        hostname: "deal"
+        networks: 
+            - dealstoreweb-app
+    #########Backend Microservice/API "Provider"
+    provider:
+        container_name: dealstore_backend_provider
+        image: waelamer/dealstore_backend_provider:2.5.0
+        build:
+            context: ./Backend.Provider
+            dockerfile: ./Dockerfile        
+        ports:
+            - "8081:80"
+        hostname: "provider"
+        networks: 
+            - dealstoreweb-app
+    #########Frontend 
+    frontend:
+        container_name: dealstore_frontend
+        image: waelamer/dealstore_frontend:2.5.0
+        build:
+            context: ./Frontend
+            dockerfile: ./Dockerfile        
+        ports:
+            - "8080:8080"
+        environment:
+            - VUE_APP_ROOT_API_P=http://localhost:8081
+            - VUE_APP_ROOT_API_D=http://localhost:8082
+        hostname: "frontend"
+        networks:
+            - dealstoreweb-app
+
+networks:
+    dealstoreweb-app:
+volumes:
+    sqldata:
+
+
+#Docker help for Local without IIS .
+#docker-compose -f docker-compose-local.yml up -d --force-recreate 
+#docker-compose -f docker-compose-local.yml build 
+#docker-compose -f docker-compose-local.yml down
+#docker-compose -f docker-compose-local.yml push
